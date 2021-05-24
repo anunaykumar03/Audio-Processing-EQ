@@ -118,6 +118,32 @@ private:
         leftLowCut.template setBypassed<2>(true);
         leftLowCut.template setBypassed<3>(true);
         
+        //case reuse... no need for break statement because Slope_48 will do everything in Slope_36 AND <3>
+        switch(chainSettings.lowCutSlope)
+        {
+            case Slope_48:
+            {
+                update<3>(leftLowCut, cutCoefficients);
+            }
+            
+            case Slope_36:
+            {
+                update<2>(leftLowCut, cutCoefficients);
+            }
+            
+            case Slope_24:
+            {
+                update<1>(leftLowCut, cutCoefficients);
+            }
+                
+            case Slope_12:
+            {
+                update<0>(leftLowCut, cutCoefficients);
+            }
+        }
+        
+        //NOT DELETING THIS COMMENTED OUT CODE SO THAT I CAN UNDERSTAND THE "update" TEMPLATE FUNCTION
+        /*
         switch(chainSettings.lowCutSlope)
         {
             case Slope_12:
