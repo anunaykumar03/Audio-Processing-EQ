@@ -54,15 +54,22 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
     
     
+    //audio plugins use parameters. need public variable in our processor for linking with GUI
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-    
     juce::AudioProcessorValueTreeState apvts{*this, nullptr, "Parameters", createParameterLayout()};
     
-    //audio plugins use parameters. need public variable in our processor for linking with GUI
     
-    
-
 private:
+    //making namespace aliases because juce::dsp:: uses lots of namespaces and nested namespaces...
+    
+    using Filter = juce::dsp::IIR::Filter<float>; /*RESEARCH PROCESS CHAINS AND PROCESS CONTEXT*/
+    
+    using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;
+    
+    using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, CutFilter>;
+    
+    MonoChain leftChain, rightChain;
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleEQAudioProcessor)
 };
