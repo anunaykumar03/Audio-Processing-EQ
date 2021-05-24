@@ -98,6 +98,14 @@ private:
     using Coefficients = Filter::CoefficientsPtr;
     static void updateCoefficients(Coefficients& old, const Coefficients& replacements);
     
+    //refactoring the switch cases for getCoefficients... (now commented)
+    template<int Index, typename ChainType, typename CoefficientType>
+    void update(ChainType& chain, const CoefficientType& coefficients)
+    {
+        updateCoefficients(chain.template get<Index>().coefficients, coefficients[Index]);
+        chain.template setBypassed<Index>(false);
+    }
+    
     template<typename ChainType, typename CoefficientType>
     void updateCutFilter(ChainType& leftLowCut,
                          const CoefficientType& cutCoefficients,
