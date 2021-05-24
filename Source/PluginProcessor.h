@@ -27,6 +27,19 @@ struct ChainSettings
 
 ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts);
 
+using Filter = juce::dsp::IIR::Filter<float>; /*RESEARCH PROCESS CHAINS AND PROCESS CONTEXT*/
+
+using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;
+
+using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, CutFilter>;
+
+enum ChainPositions
+{
+    LowCut,
+    Peak,
+    HighCut
+};
+
 //==============================================================================
 /**
 */
@@ -77,22 +90,8 @@ public:
     
     
 private:
-    //making namespace aliases because juce::dsp:: uses lots of namespaces and nested namespaces...
-    
-    using Filter = juce::dsp::IIR::Filter<float>; /*RESEARCH PROCESS CHAINS AND PROCESS CONTEXT*/
-    
-    using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;
-    
-    using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, CutFilter>;
-    
+    //making namespace aliases because juce::dsp:: uses lots of namespaces and nested namespaces... now in public up
     MonoChain leftChain, rightChain;
-    
-    enum ChainPositions
-    {
-        LowCut,
-        Peak,
-        HighCut
-    };
     
     void updatePeakFilter(const ChainSettings& chainSettings); //peak filter updating refactoring
     using Coefficients = Filter::CoefficientsPtr;
