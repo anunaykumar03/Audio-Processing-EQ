@@ -107,7 +107,7 @@ private:
     }
     
     template<typename ChainType, typename CoefficientType>
-    void updateCutFilter(ChainType& leftLowCut,
+    void updateLowCutFilter(ChainType& leftLowCut,
                          const CoefficientType& cutCoefficients,
                          const ChainSettings& chainSettings)
                          //const Slope& lowCutSlope) IDKY DOES NOT WORK :(
@@ -126,7 +126,6 @@ private:
         leftLowCut.template setBypassed<2>(true);
         leftLowCut.template setBypassed<3>(true);
         
-        //case reuse... no need for break statement because Slope_48 will do everything in Slope_36 AND <3>
         switch(chainSettings.lowCutSlope)
         {
             case Slope_48:
@@ -149,8 +148,50 @@ private:
                 update<0>(leftLowCut, cutCoefficients);
             }
         }
+    }
+    template<typename ChainType, typename CoefficientType>
+    void updateHighCutFilter(ChainType& leftHighCut,
+                         const CoefficientType& cutCoefficients,
+                         const ChainSettings& chainSettings)
+                         //const Slope& lowCutSlope) IDKY DOES NOT WORK :(
+    {
+    // const ChainSettings& chainSettings) [not using the entire chainSettings object only using the slope so not member variable in updateCutFilter] IDKY DOES NOT WORK :(
+
+//        auto cutCoefficients = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.lowCutFreq, getSampleRate(), 2*(chainSettings.lowCutSlope+1)); //last formula is derived from the implementation of IIRHighpass..., slope choice = 0,1,2,3 therefore order = 2,4,6,8 = 2*((0,1,2,3)+1)
+//
+//        //LOWCUT DSP
+//        auto& leftLowCut = leftChain.get<ChainPositions::LowCut>();
         
-        //NOT DELETING THIS COMMENTED OUT CODE SO THAT I CAN UNDERSTAND THE "update" TEMPLATE FUNCTION
+        //bypass all the links in the chain, 4 positions -> 4 bypass
+        
+        leftHighCut.template setBypassed<0>(true);
+        leftHighCut.template setBypassed<1>(true);
+        leftHighCut.template setBypassed<2>(true);
+        leftHighCut.template setBypassed<3>(true);
+        
+        switch(chainSettings.highCutSlope)
+        {
+            case Slope_48:
+            {
+                update<3>(leftHighCut, cutCoefficients);
+            }
+            
+            case Slope_36:
+            {
+                update<2>(leftHighCut, cutCoefficients);
+            }
+            
+            case Slope_24:
+            {
+                update<1>(leftHighCut, cutCoefficients);
+            }
+                
+            case Slope_12:
+            {
+                update<0>(leftHighCut, cutCoefficients);
+            }
+        }
+    }
         /*
         switch(chainSettings.lowCutSlope)
         {
@@ -194,7 +235,7 @@ private:
                 break;
             }
         }*/
-    }
+    
     
 
     //==============================================================================
