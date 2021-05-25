@@ -368,6 +368,7 @@ void ResponseCurveComponent::resized()
     
     for (int i = 0; i < freqs.size(); ++i)
     {
+        //frequency scale
         auto f = freqs[i];
         auto x = xs[i];
         
@@ -396,6 +397,7 @@ void ResponseCurveComponent::resized()
     
     for (auto gDb : gain)
     {
+        //gain scale
         auto y = jmap(gDb, -24.f, 24.f, float(bottom), float(top));
         
         String str;
@@ -412,7 +414,17 @@ void ResponseCurveComponent::resized()
         g.setColour(gDb == 0.f ? Colour(0u, 172u, 1u) : Colours::lightgrey);
         
         g.drawFittedText(str, r, juce::Justification::centred, 1);
-
+        
+        
+        //spectrum analyser scale
+        str.clear();
+        str << (gDb - 24.f);
+        
+        r.setX(1);
+        textWidth = g.getCurrentFont().getStringWidth(str);
+        r.setSize(textWidth, fontHeight);
+        g.setColour(Colours::lightgrey);
+        g.drawFittedText(str, r, juce::Justification::centred, 1);
     }
 }
 
