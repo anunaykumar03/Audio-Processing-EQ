@@ -45,6 +45,148 @@ void updateCoefficients(Coefficients& old, const Coefficients& replacements);
 
 Coefficients makePeakFilter(const ChainSettings& chainSettings, double sampleRate);
 
+//refactoring the switch cases for getCoefficients... (now commented)
+template<int Index, typename ChainType, typename CoefficientType>
+void update(ChainType& chain, const CoefficientType& coefficients)
+{
+    updateCoefficients(chain.template get<Index>().coefficients, coefficients[Index]);
+    chain.template setBypassed<Index>(false);
+}
+
+template<typename ChainType, typename CoefficientType>
+void updateLowCutFilter(ChainType& leftLowCut,
+                     const CoefficientType& cutCoefficients,
+                     const ChainSettings& chainSettings)
+                     //const Slope& lowCutSlope) IDKY DOES NOT WORK :(
+{
+// const ChainSettings& chainSettings) [not using the entire chainSettings object only using the slope so not member variable in updateCutFilter] IDKY DOES NOT WORK :(
+
+//        auto cutCoefficients = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.lowCutFreq, getSampleRate(), 2*(chainSettings.lowCutSlope+1)); //last formula is derived from the implementation of IIRHighpass..., slope choice = 0,1,2,3 therefore order = 2,4,6,8 = 2*((0,1,2,3)+1)
+//
+//        //LOWCUT DSP
+//        auto& leftLowCut = leftChain.get<ChainPositions::LowCut>();
+    
+    //bypass all the links in the chain, 4 positions -> 4 bypass
+    
+    leftLowCut.template setBypassed<0>(true);
+    leftLowCut.template setBypassed<1>(true);
+    leftLowCut.template setBypassed<2>(true);
+    leftLowCut.template setBypassed<3>(true);
+    
+    switch(chainSettings.lowCutSlope)
+    {
+        case Slope_48:
+        {
+            update<3>(leftLowCut, cutCoefficients);
+        }
+        
+        case Slope_36:
+        {
+            update<2>(leftLowCut, cutCoefficients);
+        }
+        
+        case Slope_24:
+        {
+            update<1>(leftLowCut, cutCoefficients);
+        }
+            
+        case Slope_12:
+        {
+            update<0>(leftLowCut, cutCoefficients);
+        }
+    }
+}
+
+/*
+switch(chainSettings.lowCutSlope)
+{
+    case Slope_12:
+    {
+        *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
+        leftLowCut.template setBypassed<0>(false);
+        break;
+    }
+        
+    case Slope_24:
+    {
+        *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
+        leftLowCut.template setBypassed<0>(false);
+        *leftLowCut.template get<1>().coefficients = *cutCoefficients[1];
+        leftLowCut.template setBypassed<1>(false);
+        break;
+    }
+    
+    case Slope_36:
+    {
+        *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
+        leftLowCut.template setBypassed<0>(false);
+        *leftLowCut.template get<1>().coefficients = *cutCoefficients[1];
+        leftLowCut.template setBypassed<1>(false);
+        *leftLowCut.template get<2>().coefficients = *cutCoefficients[2];
+        leftLowCut.template setBypassed<2>(false);
+        break;
+    }
+    
+    case Slope_48:
+    {
+        *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
+        leftLowCut.template setBypassed<0>(false);
+        *leftLowCut.template get<1>().coefficients = *cutCoefficients[1];
+        leftLowCut.template setBypassed<1>(false);
+        *leftLowCut.template get<2>().coefficients = *cutCoefficients[2];
+        leftLowCut.template setBypassed<2>(false);
+        *leftLowCut.template get<3>().coefficients = *cutCoefficients[3];
+        leftLowCut.template setBypassed<3>(false);
+        break;
+    }
+}*/
+
+template<typename ChainType, typename CoefficientType>
+void updateHighCutFilter(ChainType& leftHighCut,
+                     const CoefficientType& cutCoefficients,
+                     const ChainSettings& chainSettings)
+                     //const Slope& lowCutSlope) IDKY DOES NOT WORK :(
+{
+    
+    leftHighCut.template setBypassed<0>(true);
+    leftHighCut.template setBypassed<1>(true);
+    leftHighCut.template setBypassed<2>(true);
+    leftHighCut.template setBypassed<3>(true);
+    
+    switch(chainSettings.highCutSlope)
+    {
+        case Slope_48:
+        {
+            update<3>(leftHighCut, cutCoefficients);
+        }
+        
+        case Slope_36:
+        {
+            update<2>(leftHighCut, cutCoefficients);
+        }
+        
+        case Slope_24:
+        {
+            update<1>(leftHighCut, cutCoefficients);
+        }
+            
+        case Slope_12:
+        {
+            update<0>(leftHighCut, cutCoefficients);
+        }
+    }
+}
+
+inline auto makeLowCutFilter(const ChainSettings& chainSettings, double sampleRate)
+{
+    return juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.lowCutFreq, sampleRate, 2*(chainSettings.lowCutSlope+1));
+}
+
+inline auto makeHighCutFilter(const ChainSettings& chainSettings, double sampleRate)
+{
+    return juce::dsp::FilterDesign<float>::designIIRLowpassHighOrderButterworthMethod(chainSettings.highCutFreq, sampleRate, 2*(chainSettings.highCutSlope+1));
+}
+
 //==============================================================================
 /**
 */
@@ -99,140 +241,6 @@ private:
     MonoChain leftChain, rightChain;
     
     void updatePeakFilter(const ChainSettings& chainSettings); //peak filter updating refactoring
-    
-    
-    //refactoring the switch cases for getCoefficients... (now commented)
-    template<int Index, typename ChainType, typename CoefficientType>
-    void update(ChainType& chain, const CoefficientType& coefficients)
-    {
-        updateCoefficients(chain.template get<Index>().coefficients, coefficients[Index]);
-        chain.template setBypassed<Index>(false);
-    }
-    
-    template<typename ChainType, typename CoefficientType>
-    void updateLowCutFilter(ChainType& leftLowCut,
-                         const CoefficientType& cutCoefficients,
-                         const ChainSettings& chainSettings)
-                         //const Slope& lowCutSlope) IDKY DOES NOT WORK :(
-    {
-    // const ChainSettings& chainSettings) [not using the entire chainSettings object only using the slope so not member variable in updateCutFilter] IDKY DOES NOT WORK :(
-
-//        auto cutCoefficients = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.lowCutFreq, getSampleRate(), 2*(chainSettings.lowCutSlope+1)); //last formula is derived from the implementation of IIRHighpass..., slope choice = 0,1,2,3 therefore order = 2,4,6,8 = 2*((0,1,2,3)+1)
-//
-//        //LOWCUT DSP
-//        auto& leftLowCut = leftChain.get<ChainPositions::LowCut>();
-        
-        //bypass all the links in the chain, 4 positions -> 4 bypass
-        
-        leftLowCut.template setBypassed<0>(true);
-        leftLowCut.template setBypassed<1>(true);
-        leftLowCut.template setBypassed<2>(true);
-        leftLowCut.template setBypassed<3>(true);
-        
-        switch(chainSettings.lowCutSlope)
-        {
-            case Slope_48:
-            {
-                update<3>(leftLowCut, cutCoefficients);
-            }
-            
-            case Slope_36:
-            {
-                update<2>(leftLowCut, cutCoefficients);
-            }
-            
-            case Slope_24:
-            {
-                update<1>(leftLowCut, cutCoefficients);
-            }
-                
-            case Slope_12:
-            {
-                update<0>(leftLowCut, cutCoefficients);
-            }
-        }
-    }
-    
-    /*
-    switch(chainSettings.lowCutSlope)
-    {
-        case Slope_12:
-        {
-            *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
-            leftLowCut.template setBypassed<0>(false);
-            break;
-        }
-            
-        case Slope_24:
-        {
-            *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
-            leftLowCut.template setBypassed<0>(false);
-            *leftLowCut.template get<1>().coefficients = *cutCoefficients[1];
-            leftLowCut.template setBypassed<1>(false);
-            break;
-        }
-        
-        case Slope_36:
-        {
-            *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
-            leftLowCut.template setBypassed<0>(false);
-            *leftLowCut.template get<1>().coefficients = *cutCoefficients[1];
-            leftLowCut.template setBypassed<1>(false);
-            *leftLowCut.template get<2>().coefficients = *cutCoefficients[2];
-            leftLowCut.template setBypassed<2>(false);
-            break;
-        }
-        
-        case Slope_48:
-        {
-            *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
-            leftLowCut.template setBypassed<0>(false);
-            *leftLowCut.template get<1>().coefficients = *cutCoefficients[1];
-            leftLowCut.template setBypassed<1>(false);
-            *leftLowCut.template get<2>().coefficients = *cutCoefficients[2];
-            leftLowCut.template setBypassed<2>(false);
-            *leftLowCut.template get<3>().coefficients = *cutCoefficients[3];
-            leftLowCut.template setBypassed<3>(false);
-            break;
-        }
-    }*/
-    
-    template<typename ChainType, typename CoefficientType>
-    void updateHighCutFilter(ChainType& leftHighCut,
-                         const CoefficientType& cutCoefficients,
-                         const ChainSettings& chainSettings)
-                         //const Slope& lowCutSlope) IDKY DOES NOT WORK :(
-    {
-        
-        leftHighCut.template setBypassed<0>(true);
-        leftHighCut.template setBypassed<1>(true);
-        leftHighCut.template setBypassed<2>(true);
-        leftHighCut.template setBypassed<3>(true);
-        
-        switch(chainSettings.highCutSlope)
-        {
-            case Slope_48:
-            {
-                update<3>(leftHighCut, cutCoefficients);
-            }
-            
-            case Slope_36:
-            {
-                update<2>(leftHighCut, cutCoefficients);
-            }
-            
-            case Slope_24:
-            {
-                update<1>(leftHighCut, cutCoefficients);
-            }
-                
-            case Slope_12:
-            {
-                update<0>(leftHighCut, cutCoefficients);
-            }
-        }
-    }
-    
     
     void lowCutFiltersImplemented(const ChainSettings& chainSettings);
     void highCutFiltersImplemented(const ChainSettings& chainSettings);
