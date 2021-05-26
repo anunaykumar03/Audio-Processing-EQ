@@ -385,6 +385,8 @@ private:
     
     void updateFilters();
     
+    juce::dsp::Oscillator<float> osc; //test oscillator to verify FFT accuracy
+    
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleEQAudioProcessor)
