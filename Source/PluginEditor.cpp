@@ -355,12 +355,16 @@ void ResponseCurveComponent::paint (juce::Graphics& g)
         responseCurve.lineTo(responseArea.getX() + i, map(mags[i]));
     }
     
-    g.setColour(Colours::blue);
+    leftChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
+    //fft draw
+    g.setColour(Colours::red);
     g.strokePath(leftChannelFFTPath, PathStrokeType(1.f));
     
+    //renderarea draw
     g.setColour(Colours::orange);
     g.drawRoundedRectangle(getRenderArea().toFloat(), 4.f, 1.f);
     
+    //response curve draw
     g.setColour(Colours::white);
     g.strokePath(responseCurve, PathStrokeType(2.f));
         
