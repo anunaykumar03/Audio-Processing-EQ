@@ -271,7 +271,7 @@ void ResponseCurveComponent::timerCallback()
     
     if (parametersChanged.compareAndSetBool(false, true))
     {
-        DBG("params changed");
+//        DBG("params changed");
         //update monochain
         updateChain();
         //signal repaint
@@ -367,13 +367,13 @@ void ResponseCurveComponent::paint (juce::Graphics& g)
     leftChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()-10));
     
     //fft draw
-    g.setColour(Colours::skyblue);
+    g.setColour(Colour(16u, 169u, 255u));
     g.strokePath(leftChannelFFTPath, PathStrokeType(1.f));
     
     auto rightChannelFFTPath = rightPathProducer.getPath();
     rightChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()-10));
     
-    g.setColour(Colours::lightyellow);
+    g.setColour(Colour(255u, 147u, 88u));
     g.strokePath(rightChannelFFTPath, PathStrokeType(1.f));
     
     //renderarea draw
